@@ -46,17 +46,17 @@ int pHArray[ArrayLenth];   //Store the average value of the sensor feedback
 int pHArrayIndex = 0;
 //end ph bits
 
-void ecCalibration(byte mode){
-    char *receivedBufferPtr;
-    static boolean ecCalibrationFinish = 0;
-    float factorTemp;
-    switch(mode){
-      case 0:
-      if(enterCalibrationFlag)
-         Serial.println(F("Command Error"));
-      break;   
-        
-      case 1:
+void ecCalibration(byte mode) {
+  char *receivedBufferPtr;
+  static boolean ecCalibrationFinish = 0;
+  float factorTemp;
+  switch (mode) {
+    case 0:
+      if (enterCalibrationFlag)
+        Serial.println(F("Command Error"));
+      break;
+
+    case 1:
       enterCalibrationFlag = 1;
       ecCalibrationFinish = 0;
       Serial.println();
@@ -64,41 +64,41 @@ void ecCalibration(byte mode){
       Serial.println(F(">>>Please put the probe into the 12.88ms/cm buffer solution<<<"));
       Serial.println();
       break;
-    
-     case 2:
-      if(enterCalibrationFlag){
-          factorTemp = ECvalueRaw / 12.88;
-          if((factorTemp>0.85) && (factorTemp<1.15)){
-              Serial.println();
-              Serial.println(F(">>>Confrim Successful<<<"));
-              Serial.println();
-              compensationFactor =  factorTemp;
-              ecCalibrationFinish = 1;
-          }
-          else{
-            Serial.println();
-            Serial.println(F(">>>Confirm Failed,Try Again<<<"));
-            Serial.println();
-            ecCalibrationFinish = 0;
-          }        
+
+    case 2:
+      if (enterCalibrationFlag) {
+        factorTemp = ECvalueRaw / 12.88;
+        if ((factorTemp > 0.85) && (factorTemp < 1.15)) {
+          Serial.println();
+          Serial.println(F(">>>Confrim Successful<<<"));
+          Serial.println();
+          compensationFactor =  factorTemp;
+          ecCalibrationFinish = 1;
+        }
+        else {
+          Serial.println();
+          Serial.println(F(">>>Confirm Failed,Try Again<<<"));
+          Serial.println();
+          ecCalibrationFinish = 0;
+        }
       }
       break;
 
-        case 3:
-        if(enterCalibrationFlag){
-            Serial.println();
-            if(ecCalibrationFinish){
-               EEPROM_write(compensationFactorAddress, compensationFactor);
-               Serial.print(F(">>>Calibration Successful"));
-            }
-            else Serial.print(F(">>>Calibration Failed"));       
-            Serial.println(F(",Exit Calibration Mode<<<"));
-            Serial.println();
-            ecCalibrationFinish = 0;
-            enterCalibrationFlag = 0;
+    case 3:
+      if (enterCalibrationFlag) {
+        Serial.println();
+        if (ecCalibrationFinish) {
+          EEPROM_write(compensationFactorAddress, compensationFactor);
+          Serial.print(F(">>>Calibration Successful"));
         }
-        break;
-    }
+        else Serial.print(F(">>>Calibration Failed"));
+        Serial.println(F(",Exit Calibration Mode<<<"));
+        Serial.println();
+        ecCalibrationFinish = 0;
+        enterCalibrationFlag = 0;
+      }
+      break;
+  }
 }
 
 int getMedianNum(int bArray[], int iFilterLen) {
@@ -153,15 +153,15 @@ void readCharacteristicValues() {
 }
 
 float ecMeasure() {
-  float storage[100];
+  float storage[10];
   for (int i = 0; i < (sizeof(storage) / sizeof(float)); i++) {
     storage[i] = 0.0;
   }
-//  if (serialDataAvailable() > 0)
-//  {
-//    byte modeIndex = uartParse();
-//    ecCalibration(modeIndex);    // If the correct calibration command is received, the calibration function should be called.
-//  }
+  //  if (serialDataAvailable() > 0)
+  //  {
+  //    byte modeIndex = uartParse();
+  //    ecCalibration(modeIndex);    // If the correct calibration command is received, the calibration function should be called.
+  //  }
   int counter = 0;
   while (counter < sizeof(storage) / sizeof(float)) {
     static unsigned long analogSampleTimepoint = millis();
@@ -169,6 +169,10 @@ float ecMeasure() {
     {
       analogSampleTimepoint = millis();
       analogBuffer[analogBufferIndex] = analogRead(ecSensorPin);    //read the analog value and store into the buffer,every 40ms
+      Serial.print("analogBuffer ");
+      Serial.print(analogBufferIndex);
+      Serial.print(" ");
+      Serial.println(analogBuffer[analogBufferIndex]);
       analogBufferIndex++;
       if (analogBufferIndex == SCOUNT)
         analogBufferIndex = 0;
@@ -178,7 +182,8 @@ float ecMeasure() {
     if (millis() - tempSampleTimepoint > 850U) // every 1.7s, read the temperature from DS18B20
     {
       tempSampleTimepoint = millis();
-      temperature = readTemperature();  // read the current temperature from the  DS18B20
+      //temperature = readTemperature();  // read the current temperature from the  DS18B20
+      temperature = 25;
     }
 
     static unsigned long printTimepoint = millis();
@@ -189,14 +194,14 @@ float ecMeasure() {
       float averageVoltage = AnalogAverage * (float)VREF / 1024.0;
       if (temperature == -1000)
       {
-        temperature = 25.0;      //when no temperature sensor ,temperature should be 25^C default
+        temperature = 25;      //when no temperature sensor ,temperature should be 25^C default
         Serial.print(temperature, 1);
         Serial.print(F("^C(default)    EC:"));
       } else {
         Serial.print(temperature, 1);   //current temperature
         Serial.print(F("^C             EC:"));
       }
-      float TempCoefficient = 1.0 + 0.0185 * (temperature - 25.0); //temperature compensation formula: fFinalResult(25^C) = fFinalResult(current)/(1.0+0.0185*(fTP-25.0));
+      float TempCoefficient = 1.0 + 0.0185 * ((float)temperature - 25.0); //temperature compensation formula: fFinalResult(25^C) = fFinalResult(current)/(1.0+0.0185*(fTP-25.0));
       float CoefficientVolatge = (float)averageVoltage / TempCoefficient;
       if (CoefficientVolatge < 150)Serial.println(F("No solution!")); //25^C 1413us/cm<-->about 216mv  if the voltage(compensate)<150,that is <1ms/cm,out of the range
       else if (CoefficientVolatge > 3300)Serial.println(F("Out of the range!")); //>20ms/cm,out of the range
@@ -216,6 +221,12 @@ float ecMeasure() {
         Serial.println(counter);
         storage[counter] = ECvalue;
         counter++;
+        if (counter % 2 == 1) {
+          digitalWrite(LED_BUILTIN, LOW);
+        }
+        else {
+          digitalWrite(LED_BUILTIN, HIGH);
+        }
       }
     }
     //    storage[counter] = ECvalue;
@@ -272,8 +283,8 @@ double avergearray(int* arr, int number) {
 }
 
 float phMeasure() {
-  float storage[100];
-  for (int i = 0; i < (sizeof(storage)/sizeof(float)); i++) {
+  float storage[10];
+  for (int i = 0; i < (sizeof(storage) / sizeof(float)); i++) {
     storage[i] = 0.0;
   }
   Serial.println("finish init loop");
@@ -281,7 +292,7 @@ float phMeasure() {
   static unsigned long printTime = millis();
   static float pHValue, voltage;
   int counter = 0;
-  while (counter < (sizeof(storage)/sizeof(float))) {
+  while (counter < (sizeof(storage) / sizeof(float))) {
     if (millis() - samplingTime > samplingInterval) {
       pHArray[pHArrayIndex++] = analogRead(SensorPin);
       if (pHArrayIndex == ArrayLenth)pHArrayIndex = 0;
@@ -302,25 +313,29 @@ float phMeasure() {
       Serial.print("   ");
       Serial.print(counter);
       Serial.print("   ");
-      Serial.println((sizeof(storage)/sizeof(float)));
+      Serial.println((sizeof(storage) / sizeof(float)));
     }
-    
+
   }
   float summation = 0;
-  for (int l = 0; l < (sizeof(storage)/sizeof(float)); l++) {
+  for (int l = 0; l < (sizeof(storage) / sizeof(float)); l++) {
     summation += storage[l];
     //summation += storage[l];
     Serial.println(storage[l]);
   }
-  summation = summation / (sizeof(storage)/sizeof(float));
+  summation = summation / (sizeof(storage) / sizeof(float));
   return summation;
 }
 
-void setup(){
+void setup() {
   pinMode(3, INPUT);
   pinMode(2, OUTPUT);
   pinMode(4, OUTPUT);//ph led
   pinMode(5, OUTPUT);//ec led
+
+  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(12, OUTPUT);
+
   Serial.begin(9600);
   NanoSerial.begin(57600);
 }
@@ -330,13 +345,17 @@ void loop() {
     int cmd = NanoSerial.parseInt();
     switch (cmd) {
       case 1://check ph
-        ph = 6.0;
-        //ph = phMeasure();
+        //ph = 6.0;
+        ph = phMeasure();
         NanoSerial.println(ph);
         break;
       case 2://check ec
         //ec = 1.7;
+        digitalWrite(LED_BUILTIN, HIGH);
+        //digitalWrite(12, HIGH);
         ec = ecMeasure();
+        digitalWrite(LED_BUILTIN, LOW);
+        //digitalWrite(12, LOW);
         NanoSerial.println(ec);
         break;
       case 3: //ph too low warning physical
@@ -355,4 +374,6 @@ void loop() {
         break;
     }
   }
+  float peanut = ecMeasure();
+  Serial.println(peanut);
 }

@@ -226,7 +226,7 @@ double avergearray(int* arr, int number) {
 }
 
 void ecMeasure() {
-  float storage[100];
+  float storage[10];
   for (int i = 0; i < (sizeof(storage) / sizeof(float)); i++) {
     storage[i] = 0.0;
   }
@@ -248,7 +248,7 @@ void ecMeasure() {
     static unsigned long tempSampleTimepoint = millis();
     if (millis() - tempSampleTimepoint > 850U) { // every 1.7s, read the temperature from DS18B20
       tempSampleTimepoint = millis();
-      temperature = readTemperature();  // read the current temperature from the  DS18B20
+      temperature = 25;  // read the current temperature from the  DS18B20
     }
     static unsigned long printTimePrint = millis();
     if (millis() - printTimePrint > 1000U) {

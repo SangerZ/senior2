@@ -70,7 +70,7 @@ void checkPH() {
   Serial.println("**********entering checkPH***********");
   digitalWrite(PH_PROBE, LOW);
   NodeSerial.println(1);
-  delay(80000);
+  delay(10000);
   Serial.println("**********finish delay***********");
   
   //
@@ -107,9 +107,11 @@ void checkPH() {
 }
 
 void checkEC() {
+  Serial.println("**********entering checkEC***********");
   digitalWrite(EC_PROBE, LOW);
   NodeSerial.println(2);
-  delay(80000);
+  delay(70000);
+  Serial.println("**********finish delay***********");
   while (NodeSerial.available() || ecTemp == 0.0) {
     ecTemp = NodeSerial.parseFloat();
     Serial.print("ec : ");
