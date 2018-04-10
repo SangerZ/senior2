@@ -154,13 +154,19 @@ void readCharacteristicValues() {
 
 float ecMeasure() {
   float storage[100];
-  for (int i = 0; i < sizeof(storage); i++) {
-    storage[i] = -1;
+  for (int i = 0; i < (sizeof(storage) / sizeof(float)); i++) {
+    storage[i] = 0.0;
   }
+//  if (serialDataAvailable() > 0)
+//  {
+//    byte modeIndex = uartParse();
+//    ecCalibration(modeIndex);    // If the correct calibration command is received, the calibration function should be called.
+//  }
   int counter = 0;
-  while (storage[99] == -1) {
+  while (counter < sizeof(storage) / sizeof(float)) {
     static unsigned long analogSampleTimepoint = millis();
-    if (millis() - analogSampleTimepoint > 30U) { //every 30ms,read the analog value from the ADC
+    if (millis() - analogSampleTimepoint > 30U) //every 30ms,read the analog value from the ADC
+    {
       analogSampleTimepoint = millis();
       analogBuffer[analogBufferIndex] = analogRead(ecSensorPin);    //read the analog value and store into the buffer,every 40ms
       analogBufferIndex++;
@@ -169,64 +175,59 @@ float ecMeasure() {
     }
 
     static unsigned long tempSampleTimepoint = millis();
-    if (millis() - tempSampleTimepoint > 850U) { // every 1.7s, read the temperature from DS18B20
+    if (millis() - tempSampleTimepoint > 850U) // every 1.7s, read the temperature from DS18B20
+    {
       tempSampleTimepoint = millis();
       temperature = readTemperature();  // read the current temperature from the  DS18B20
     }
 
     static unsigned long printTimepoint = millis();
-    if (millis() - printTimepoint > 1000U) {
+    if (millis() - printTimepoint > 1000U)
+    {
       printTimepoint = millis();
       float AnalogAverage = getMedianNum(analogBuffer, SCOUNT);  // read the stable value by the median filtering algorithm
       float averageVoltage = AnalogAverage * (float)VREF / 1024.0;
-      if (temperature == -1000) {
+      if (temperature == -1000)
+      {
         temperature = 25.0;      //when no temperature sensor ,temperature should be 25^C default
         Serial.print(temperature, 1);
         Serial.print(F("^C(default)    EC:"));
-      }
-      else {
+      } else {
         Serial.print(temperature, 1);   //current temperature
         Serial.print(F("^C             EC:"));
       }
-      float TempCoefficient = 1.0 + 0.0185 * (temperature - 25); //temperature compensation formula: fFinalResult(25^C) = fFinalResult(current)/(1.0+0.0185*(fTP-25.0));
+      float TempCoefficient = 1.0 + 0.0185 * (temperature - 25.0); //temperature compensation formula: fFinalResult(25^C) = fFinalResult(current)/(1.0+0.0185*(fTP-25.0));
       float CoefficientVolatge = (float)averageVoltage / TempCoefficient;
-      if (CoefficientVolatge < 150) {
-        Serial.println(F("No solution!")); //25^C 1413us/cm<-->about 216mv  if the voltage(compensate)<150,that is <1ms/cm,out of the range
-      }
-      else if (CoefficientVolatge > 3300) {
-        Serial.println(F("Out of the range!")); //>20ms/cm,out of the range
-      }
+      if (CoefficientVolatge < 150)Serial.println(F("No solution!")); //25^C 1413us/cm<-->about 216mv  if the voltage(compensate)<150,that is <1ms/cm,out of the range
+      else if (CoefficientVolatge > 3300)Serial.println(F("Out of the range!")); //>20ms/cm,out of the range
       else {
-        if (CoefficientVolatge <= 448) {
-          ECvalue = 6.84 * CoefficientVolatge - 64.32; //1ms/cm<EC<=3ms/cm
-        }
-        else if (CoefficientVolatge <= 1457) {
-          ECvalue = 6.98 * CoefficientVolatge - 127; //3ms/cm<EC<=10ms/cm
-        }
-        else {
-          ECvalue = 5.3 * CoefficientVolatge + 2278; //10ms/cm<EC<20ms/cm
-        }
+        if (CoefficientVolatge <= 448)ECvalue = 6.84 * CoefficientVolatge - 64.32; //1ms/cm<EC<=3ms/cm
+        else if (CoefficientVolatge <= 1457)ECvalue = 6.98 * CoefficientVolatge - 127; //3ms/cm<EC<=10ms/cm
+        else ECvalue = 5.3 * CoefficientVolatge + 2278;                     //10ms/cm<EC<20ms/cm
         ECvalueRaw = ECvalue / 1000.0;
         ECvalue = ECvalue / compensationFactor / 1000.0; //after compensation,convert us/cm to ms/cm
         Serial.print(ECvalue, 2);    //two decimal
         Serial.print(F("ms/cm"));
-        if (enterCalibrationFlag) {           // in calibration mode, print the voltage to user, to watch the stability of voltage
+        if (enterCalibrationFlag)            // in calibration mode, print the voltage to user, to watch the stability of voltage
+        {
           Serial.print(F("            Factor:"));
           Serial.print(compensationFactor);
         }
-        Serial.println();
-        float answer = ECvalue;
-        //return answer;
-        storage[counter] = answer;
+        Serial.println(counter);
+        storage[counter] = ECvalue;
         counter++;
       }
     }
+    //    storage[counter] = ECvalue;
+    //    counter++;
   }
   float summation = 0;
-  for (int i = 0; i < sizeof(storage); i++) {
-    summation += storage[i];
+  for (int l = 0; l < (sizeof(storage) / sizeof(float)); l++) {
+    summation += storage[l];
+    //summation += storage[l];
+    //Serial.println(storage[l]);
   }
-  summation = summation / sizeof(storage);
+  summation = summation / (sizeof(storage) / sizeof(float));
   return summation;
 }
 

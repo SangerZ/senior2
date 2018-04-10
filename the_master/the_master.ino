@@ -69,9 +69,10 @@ void checkFirebase() {
 void checkPH() {
   Serial.println("**********entering checkPH***********");
   digitalWrite(PH_PROBE, LOW);
-  delay(10000);
-  Serial.println("**********finish delay***********");
   NodeSerial.println(1);
+  delay(80000);
+  Serial.println("**********finish delay***********");
+  
   //
   while (NodeSerial.available() || phTemp == 0.0) {
     phTemp = NodeSerial.parseFloat();
@@ -107,8 +108,8 @@ void checkPH() {
 
 void checkEC() {
   digitalWrite(EC_PROBE, LOW);
-  delay(10000);
   NodeSerial.println(2);
+  delay(80000);
   while (NodeSerial.available() || ecTemp == 0.0) {
     ecTemp = NodeSerial.parseFloat();
     Serial.print("ec : ");
@@ -168,7 +169,6 @@ void pushFirebase(){
   delay(1000);
 }
 
-
 void setup() {
   Serial.begin(9600);
   pinMode(ledPin, OUTPUT);
@@ -188,15 +188,13 @@ void setup() {
   digitalWrite(PUMP_A, HIGH);
 
   WiFiManager wifiManager;
-  if (digitalRead(ConfigWiFi_Pin) == LOW) // Press button
-  {
+  if (digitalRead(ConfigWiFi_Pin) == LOW) {// Press button
     //reset saved settings
     Serial.print("entering configuration mode");
     wifiManager.resetSettings(); // go to ip 192.168.4.1 to config
   }
   wifiManager.autoConnect(ESP_AP_NAME);
-  while (WiFi.status() != WL_CONNECTED)
-  {
+  while (WiFi.status() != WL_CONNECTED){
     delay(250);
     Serial.print(".");
   }
@@ -243,6 +241,7 @@ int dst = 0;
   Serial.println();
   Serial.println("NodeMCU/ESP8266 Run");
   int tickEvent = t.every(10000, checkWaterQuality);
+  //int tickEvent = t.every(900000, checkWaterQuality);
 }
 
 void loop() {
