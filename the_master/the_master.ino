@@ -38,7 +38,7 @@ float phBar = 6.0;
 float ecGet = 0.0;
 float phGet = 0.0;
 float phTemp = 0.0;
-float ecTemp = 0.0;
+float ecTemp = -1.0;
 int volume = 300;
 
 Timer t;
@@ -67,6 +67,7 @@ void checkFirebase() {
 }
 
 void checkPH() {
+  phTemp = -1.0;
   Serial.println("**********entering checkPH***********");
   digitalWrite(PH_PROBE, LOW);
   NodeSerial.println(1);
@@ -74,7 +75,7 @@ void checkPH() {
   Serial.println("**********finish delay***********");
   
   //
-  while (NodeSerial.available() || phTemp == 0.0) {
+  while (NodeSerial.available() || phTemp == -1.0) {
     phTemp = NodeSerial.parseFloat();
     Serial.print("ph : ");
     Serial.println(phTemp);
@@ -107,12 +108,13 @@ void checkPH() {
 }
 
 void checkEC() {
+  ecTemp = -1.0;
   Serial.println("**********entering checkEC***********");
   digitalWrite(EC_PROBE, LOW);
   NodeSerial.println(2);
-  delay(70000);
+  delay(20000);
   Serial.println("**********finish delay***********");
-  while (NodeSerial.available() || ecTemp == 0.0) {
+  while (NodeSerial.available() || ecTemp == -1.0) {
     ecTemp = NodeSerial.parseFloat();
     Serial.print("ec : ");
     Serial.println(ecTemp);

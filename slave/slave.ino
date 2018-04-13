@@ -1,5 +1,3 @@
-//int i_data = 1234;
-//float f_data = 567.89;
 #include <SoftwareSerial.h>
 #include <EEPROM.h>
 #include <OneWire.h>
@@ -12,6 +10,7 @@ float ec;
 //ec bits
 #define EEPROM_write(address, p) {int i = 0; byte *pp = (byte*)&(p);for(; i < sizeof(p); i++) EEPROM.write(address+i, pp[i]);}
 #define EEPROM_read(address, p)  {int i = 0; byte *pp = (byte*)&(p);for(; i < sizeof(p); i++) pp[i]=EEPROM.read(address+i);}
+
 #define ReceivedBufferLength 20
 char receivedBuffer[ReceivedBufferLength + 1]; // store the serial command
 byte receivedBufferIndex = 0;
@@ -24,15 +23,13 @@ int analogBuffer[SCOUNT];    //store the analog value read from ADC
 int analogBufferIndex = 0;
 
 #define compensationFactorAddress 8    //the address of the factor stored in the EEPROM
-float compensationFactor;
+float compensationFactor = 1.0;
 
 #define VREF 5000  //for arduino uno, the ADC reference is the power(AVCC), that is 5000mV
 
 boolean enterCalibrationFlag = 0;
-float ECvalue, ECvalueRaw;
-int temperature;
-SimpleDHT11 dht11;
-int pinDHT11 = 6;
+float temperature, ECvalue, ECvalueRaw;
+OneWire ds(ds18b20Pin);
 //end ec bits
 
 //ph bits
@@ -46,11 +43,130 @@ int pHArray[ArrayLenth];   //Store the average value of the sensor feedback
 int pHArrayIndex = 0;
 //end ph bits
 
+float ecMeasure() {
+  float temperature, ECvalue, ECvalueRaw;
+  if (serialDataAvailable() > 0)
+  {
+    byte modeIndex = uartParse();
+    ecCalibration(modeIndex);    // If the correct calibration command is received, the calibration function should be called.
+  }
+  float storage[10];
+  for (int i = 0; i < (sizeof(storage) / sizeof(float)); i++) {
+    storage[i] = 0.0;
+  }
+
+  int counter = 0;
+  while (counter < sizeof(storage) / sizeof(float)) {
+    static unsigned long analogSampleTimepoint = millis();
+    if (millis() - analogSampleTimepoint > 30U) //every 30ms,read the analog value from the ADC
+    {
+      analogSampleTimepoint = millis();
+      analogBuffer[analogBufferIndex] = analogRead(ecSensorPin);    //read the analog value and store into the buffer,every 40ms
+      analogBufferIndex++;
+      if (analogBufferIndex == SCOUNT)
+        analogBufferIndex = 0;
+    }
+
+    static unsigned long tempSampleTimepoint = millis();
+    if (millis() - tempSampleTimepoint > 850U) // every 1.7s, read the temperature from DS18B20
+    {
+      tempSampleTimepoint = millis();
+      temperature = readTemperature();  // read the current temperature from the  DS18B20
+    }
+
+    static unsigned long printTimepoint = millis();
+    if (millis() - printTimepoint > 1000U)
+    {
+      printTimepoint = millis();
+      float AnalogAverage = getMedianNum(analogBuffer, SCOUNT);  // read the stable value by the median filtering algorithm
+      float averageVoltage = AnalogAverage * (float)VREF / 1024.0;
+      if (temperature == -1000)
+      {
+        temperature = 25.0;      //when no temperature sensor ,temperature should be 25^C default
+        Serial.print(temperature, 1);
+        Serial.print(F("^C(default)    EC:"));
+      } else {
+        Serial.print(temperature, 1);   //current temperature
+        Serial.print(F("^C             EC:"));
+      }
+      float TempCoefficient = 1.0 + 0.0185 * (temperature - 25.0); //temperature compensation formula: fFinalResult(25^C) = fFinalResult(current)/(1.0+0.0185*(fTP-25.0));
+      float CoefficientVolatge = (float)averageVoltage / TempCoefficient;
+      Serial.print("CoefficientVolatge is ");
+      Serial.println(CoefficientVolatge);
+      if (CoefficientVolatge < 150)Serial.println(F("No solution!")); //25^C 1413us/cm<-->about 216mv  if the voltage(compensate)<150,that is <1ms/cm,out of the range
+      else if (CoefficientVolatge > 3300)Serial.println(F("Out of the range!")); //>20ms/cm,out of the range
+      else {
+        if (CoefficientVolatge <= 448)ECvalue = 6.84 * CoefficientVolatge - 64.32; //1ms/cm<EC<=3ms/cm
+        else if (CoefficientVolatge <= 1457)ECvalue = 6.98 * CoefficientVolatge - 127; //3ms/cm<EC<=10ms/cm
+        else ECvalue = 5.3 * CoefficientVolatge + 2278;                     //10ms/cm<EC<20ms/cm
+        ECvalueRaw = ECvalue / 1000.0;
+        ECvalue = ECvalue / compensationFactor / 1000.0; //after compensation,convert us/cm to ms/cm
+      Serial.print("ECvalue is ");
+      Serial.println(ECvalue);        
+        Serial.print(ECvalue, 2);    //two decimal
+        Serial.print(F("ms/cm"));
+        storage[counter] = ECvalue;
+        counter++;
+        if (enterCalibrationFlag)            // in calibration mode, print the voltage to user, to watch the stability of voltage
+        {
+          Serial.print(F("            Factor:"));
+          Serial.print(compensationFactor);
+        }
+        Serial.println();
+      }
+    }
+  }
+  float summation = 0;
+  for (int l = 0; l < (sizeof(storage) / sizeof(float)); l++) {
+    summation += storage[l];
+    //summation += storage[l];
+    //Serial.println(storage[l]);
+  }
+  summation = summation / (sizeof(storage) / sizeof(float));
+  return summation;
+}
+
+boolean serialDataAvailable(void) {
+  char receivedChar;
+  static unsigned long receivedTimeOut = millis();
+  while (Serial.available() > 0)
+  {
+    if (millis() - receivedTimeOut > 500U)
+    {
+      receivedBufferIndex = 0;
+      memset(receivedBuffer, 0, (ReceivedBufferLength + 1));
+    }
+    receivedTimeOut = millis();
+    receivedChar = Serial.read();
+    if (receivedChar == '\n' || receivedBufferIndex == ReceivedBufferLength) {
+      receivedBufferIndex = 0;
+      strupr(receivedBuffer);
+      return true;
+    } else {
+      receivedBuffer[receivedBufferIndex] = receivedChar;
+      receivedBufferIndex++;
+    }
+  }
+  return false;
+}
+
+byte uartParse() {
+  byte modeIndex = 0;
+  if (strstr(receivedBuffer, "CALIBRATION") != NULL)
+    modeIndex = 1;
+  else if (strstr(receivedBuffer, "EXIT") != NULL)
+    modeIndex = 3;
+  else if (strstr(receivedBuffer, "CONFIRM") != NULL)
+    modeIndex = 2;
+  return modeIndex;
+}
+
 void ecCalibration(byte mode) {
   char *receivedBufferPtr;
   static boolean ecCalibrationFinish = 0;
   float factorTemp;
-  switch (mode) {
+  switch (mode)
+  {
     case 0:
       if (enterCalibrationFlag)
         Serial.println(F("Command Error"));
@@ -66,9 +182,11 @@ void ecCalibration(byte mode) {
       break;
 
     case 2:
-      if (enterCalibrationFlag) {
+      if (enterCalibrationFlag)
+      {
         factorTemp = ECvalueRaw / 12.88;
-        if ((factorTemp > 0.85) && (factorTemp < 1.15)) {
+        if ((factorTemp > 0.85) && (factorTemp < 1.15))
+        {
           Serial.println();
           Serial.println(F(">>>Confrim Successful<<<"));
           Serial.println();
@@ -85,9 +203,11 @@ void ecCalibration(byte mode) {
       break;
 
     case 3:
-      if (enterCalibrationFlag) {
+      if (enterCalibrationFlag)
+      {
         Serial.println();
-        if (ecCalibrationFinish) {
+        if (ecCalibrationFinish)
+        {
           EEPROM_write(compensationFactorAddress, compensationFactor);
           Serial.print(F(">>>Calibration Successful"));
         }
@@ -103,44 +223,28 @@ void ecCalibration(byte mode) {
 
 int getMedianNum(int bArray[], int iFilterLen) {
   int bTab[iFilterLen];
-  for (byte i = 0; i < iFilterLen; i++) {
+  for (byte i = 0; i < iFilterLen; i++)
+  {
     bTab[i] = bArray[i];
   }
   int i, j, bTemp;
-  for (j = 0; j < iFilterLen - 1; j++) {
-    for (i = 0; i < iFilterLen - j - 1; i++) {
-      if (bTab[i] > bTab[i + 1]) {
+  for (j = 0; j < iFilterLen - 1; j++)
+  {
+    for (i = 0; i < iFilterLen - j - 1; i++)
+    {
+      if (bTab[i] > bTab[i + 1])
+      {
         bTemp = bTab[i];
         bTab[i] = bTab[i + 1];
         bTab[i + 1] = bTemp;
       }
     }
   }
-  if ((iFilterLen & 1) > 0) {
+  if ((iFilterLen & 1) > 0)
     bTemp = bTab[(iFilterLen - 1) / 2];
-  }
-  else {
+  else
     bTemp = (bTab[iFilterLen / 2] + bTab[iFilterLen / 2 - 1]) / 2;
-  }
   return bTemp;
-}
-
-int readTemperature() {
-  byte temperature = 0;
-  byte humidity = 0;
-  int err = SimpleDHTErrSuccess;
-  while (1) {
-    if ((err = dht11.read(pinDHT11, &temperature, &humidity, NULL)) == SimpleDHTErrSuccess) {
-      Serial.print("Sample OK: ");
-      Serial.print((int)temperature); Serial.print(" *C, ");
-      Serial.print((int)humidity); Serial.println(" H");
-      return (int)temperature;
-    }
-    else {
-      Serial.print("Read DHT11 failed, err="); Serial.println(err); delay(1000);
-      return 25;
-    }
-  }
 }
 
 void readCharacteristicValues() {
@@ -152,95 +256,46 @@ void readCharacteristicValues() {
   }
 }
 
-float ecMeasure() {
-  float storage[10];
-  for (int i = 0; i < (sizeof(storage) / sizeof(float)); i++) {
-    storage[i] = 0.0;
-  }
-  //  if (serialDataAvailable() > 0)
-  //  {
-  //    byte modeIndex = uartParse();
-  //    ecCalibration(modeIndex);    // If the correct calibration command is received, the calibration function should be called.
-  //  }
-  int counter = 0;
-  while (counter < sizeof(storage) / sizeof(float)) {
-    static unsigned long analogSampleTimepoint = millis();
-    if (millis() - analogSampleTimepoint > 30U) //every 30ms,read the analog value from the ADC
-    {
-      analogSampleTimepoint = millis();
-      analogBuffer[analogBufferIndex] = analogRead(ecSensorPin);    //read the analog value and store into the buffer,every 40ms
-      Serial.print("analogBuffer ");
-      Serial.print(analogBufferIndex);
-      Serial.print(" ");
-      Serial.println(analogBuffer[analogBufferIndex]);
-      analogBufferIndex++;
-      if (analogBufferIndex == SCOUNT)
-        analogBufferIndex = 0;
+//returns the temperature from one DS18B20 in DEG Celsius
+float readTemperature() {
+  static byte data[12], addr[8];
+  static float TemperatureSum = 25;
+  static boolean ch = 0;
+  if (!ch) {
+    if ( !ds.search(addr)) {
+      // Serial.println("no more sensors on chain, reset search!");
+      ds.reset_search();
+      return -1000;
     }
-
-    static unsigned long tempSampleTimepoint = millis();
-    if (millis() - tempSampleTimepoint > 850U) // every 1.7s, read the temperature from DS18B20
-    {
-      tempSampleTimepoint = millis();
-      //temperature = readTemperature();  // read the current temperature from the  DS18B20
-      temperature = 25;
+    if ( OneWire::crc8( addr, 7) != addr[7]) {
+      //  Serial.println("CRC is not valid!");
+      return -1000;
     }
-
-    static unsigned long printTimepoint = millis();
-    if (millis() - printTimepoint > 1000U)
-    {
-      printTimepoint = millis();
-      float AnalogAverage = getMedianNum(analogBuffer, SCOUNT);  // read the stable value by the median filtering algorithm
-      float averageVoltage = AnalogAverage * (float)VREF / 1024.0;
-      if (temperature == -1000)
-      {
-        temperature = 25;      //when no temperature sensor ,temperature should be 25^C default
-        Serial.print(temperature, 1);
-        Serial.print(F("^C(default)    EC:"));
-      } else {
-        Serial.print(temperature, 1);   //current temperature
-        Serial.print(F("^C             EC:"));
-      }
-      float TempCoefficient = 1.0 + 0.0185 * ((float)temperature - 25.0); //temperature compensation formula: fFinalResult(25^C) = fFinalResult(current)/(1.0+0.0185*(fTP-25.0));
-      float CoefficientVolatge = (float)averageVoltage / TempCoefficient;
-      if (CoefficientVolatge < 150)Serial.println(F("No solution!")); //25^C 1413us/cm<-->about 216mv  if the voltage(compensate)<150,that is <1ms/cm,out of the range
-      else if (CoefficientVolatge > 3300)Serial.println(F("Out of the range!")); //>20ms/cm,out of the range
-      else {
-        if (CoefficientVolatge <= 448)ECvalue = 6.84 * CoefficientVolatge - 64.32; //1ms/cm<EC<=3ms/cm
-        else if (CoefficientVolatge <= 1457)ECvalue = 6.98 * CoefficientVolatge - 127; //3ms/cm<EC<=10ms/cm
-        else ECvalue = 5.3 * CoefficientVolatge + 2278;                     //10ms/cm<EC<20ms/cm
-        ECvalueRaw = ECvalue / 1000.0;
-        ECvalue = ECvalue / compensationFactor / 1000.0; //after compensation,convert us/cm to ms/cm
-        Serial.print(ECvalue, 2);    //two decimal
-        Serial.print(F("ms/cm"));
-        if (enterCalibrationFlag)            // in calibration mode, print the voltage to user, to watch the stability of voltage
-        {
-          Serial.print(F("            Factor:"));
-          Serial.print(compensationFactor);
-        }
-        Serial.println(counter);
-        storage[counter] = ECvalue;
-        counter++;
-        if (counter % 2 == 1) {
-          digitalWrite(LED_BUILTIN, LOW);
-        }
-        else {
-          digitalWrite(LED_BUILTIN, HIGH);
-        }
-      }
+    if ( addr[0] != 0x10 && addr[0] != 0x28) {
+      //  Serial.print("Device is not recognized!");
+      return -1000;
     }
-    //    storage[counter] = ECvalue;
-    //    counter++;
+    ds.reset();
+    ds.select(addr);
+    ds.write(0x44, 1); // start conversion, with parasite power on at the end
+  } else {
+    byte present = ds.reset();
+    ds.select(addr);
+    ds.write(0xBE); // Read Scratchpad
+    for (int i = 0; i < 9; i++) { // we need 9 bytes
+      data[i] = ds.read();
+    }
+    ds.reset_search();
+    byte MSB = data[1];
+    byte LSB = data[0];
+    float tempRead = ((MSB << 8) | LSB); //using two's compliment
+    TemperatureSum = tempRead / 16;
   }
-  float summation = 0;
-  for (int l = 0; l < (sizeof(storage) / sizeof(float)); l++) {
-    summation += storage[l];
-    //summation += storage[l];
-    //Serial.println(storage[l]);
-  }
-  summation = summation / (sizeof(storage) / sizeof(float));
-  return summation;
+  ch = !ch;
+  return TemperatureSum;
 }
+
+
 
 double avergearray(int* arr, int number) {
   int i;
@@ -374,6 +429,8 @@ void loop() {
         break;
     }
   }
-  float peanut = ecMeasure();
-  Serial.println(peanut);
+//  digitalWrite(LED_BUILTIN, HIGH);
+//  float peanut = ecMeasure();
+//  Serial.println(peanut);
+//  digitalWrite(LED_BUILTIN, LOW);
 }
