@@ -1,0 +1,143 @@
+{
+  "project_info": {
+    "project_number": "738427142164",
+    "firebase_url": "https://thesmartfarm-7f3a5.firebaseio.com",
+    "project_id": "thesmartfarm-7f3a5",
+    "storage_bucket": "thesmartfarm-7f3a5.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:738427142164:android:cf5fb60955caab29",
+        "android_client_info": {
+          "package_name": "com.example.ratve.smartfarm"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "738427142164-sgudeqgl8ahbgd76nnvs0vjctdn5tc7p.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.ratve.smartfarm",
+            "certificate_hash": "4005396f94173b5f45247cfbe14d29b563eff3b6"
+          }
+        },
+        {
+          "client_id": "738427142164-ccvo3behoo80dn6pvj4uf9q9ss3p0skg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBILWzCq71peGXjZ4vDRA5rFxNTrPdJjNo"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "738427142164-ccvo3behoo80dn6pvj4uf9q9ss3p0skg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:738427142164:android:e63768379ff14f1e",
+        "android_client_info": {
+          "package_name": "com.example.seven.hydrosmartfarm"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "738427142164-eub9tvstgra1483m2sn6jfig4s69nrjk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.seven.hydrosmartfarm",
+            "certificate_hash": "4005396f94173b5f45247cfbe14d29b563eff3b6"
+          }
+        },
+        {
+          "client_id": "738427142164-ccvo3behoo80dn6pvj4uf9q9ss3p0skg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBILWzCq71peGXjZ4vDRA5rFxNTrPdJjNo"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "738427142164-ccvo3behoo80dn6pvj4uf9q9ss3p0skg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:738427142164:android:092aef2fb0e6026a",
+        "android_client_info": {
+          "package_name": "com.example.seven.smartfarm_test"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "738427142164-06lcfv4grj9cfmsq6covj5r8gb73jodn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.seven.smartfarm_test",
+            "certificate_hash": "4005396f94173b5f45247cfbe14d29b563eff3b6"
+          }
+        },
+        {
+          "client_id": "738427142164-ccvo3behoo80dn6pvj4uf9q9ss3p0skg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBILWzCq71peGXjZ4vDRA5rFxNTrPdJjNo"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "738427142164-ccvo3behoo80dn6pvj4uf9q9ss3p0skg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
