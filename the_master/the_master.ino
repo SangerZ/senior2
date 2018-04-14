@@ -168,7 +168,7 @@ void pushFirebase(){
   valueObject["ph"] = phGet;
   valueObject["time"] = ctime(&now);
 
-  Firebase.push("/5735451/value", valueObject);
+  Firebase.push("/5735451Data/value", valueObject);
   Serial.println("finish pushing to firebase");
   delay(1000);
 }
