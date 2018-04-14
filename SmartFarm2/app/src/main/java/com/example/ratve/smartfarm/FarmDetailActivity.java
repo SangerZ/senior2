@@ -48,109 +48,6 @@ public class FarmDetailActivity extends AppCompatActivity {
 
         ref = FirebaseDatabase.getInstance().getReference().child("value");
 
-
-
-        final int count = 0;
-//        final TextView textView = findViewByIdd(R.id.textView);
-//        textView.setText(String.valueOf(ref));
-//        ChildEventListener childEventListener = new ChildEventListener() {
-//            @Override
-//            public void onChildAdded(DataSnapshot dataSnapshot, String previousChildName) {
-////                // A new data item has been added, add it to the list
-//                EcPhclass message = dataSnapshot.getValue(EcPhclass.class);
-//                ecPhlist.add(message);
-//            }
-//
-//            @Override
-//            public void onChildChanged(DataSnapshot dataSnapshot, String previousChildName) {
-//
-//                test = String.valueOf(dataSnapshot.getValue());
-//
-//            }
-//
-//
-//            @Override
-//            public void onChildRemoved(DataSnapshot dataSnapshot) {
-//                // A data item has been removed
-//                EcPhclass message = dataSnapshot.getValue(EcPhclass.class);
-//            }
-//
-//            @Override
-//            public void onChildMoved(DataSnapshot dataSnapshot, String previousChildName) {
-////                Log.d("test", "onChildMoved:" + dataSnapshot.getKey());
-////
-////                // A data item has changed position
-////                Comment movedComment = dataSnapshot.getValue(Comment.class);
-////                Message message = dataSnapshot.getValue(Message.class);
-//            }
-//
-//            @Override
-//            public void onCancelled(DatabaseError databaseError) {
-////                Log.w(TAG, "onCancelled", databaseError.toException());
-////                Toast.makeText(mContext, "Failed to load data.", Toast.LENGTH_SHORT).show();
-//            }
-//        };
-//        ValueEventListener valueEventListener = new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//
-//                test =(String) dataSnapshot.child("-LA1Q1hIMaWHg1WxF-HW\\n").getValue();
-//                Log.d("1221",test);
-//            }
-//
-//            @Override
-//            public void onCancelled(DatabaseError databaseError) {
-//
-//            }
-//        };
-
-//        ref.addValueEventListener(valueEventListener);
-//        ref.addValueEventListenerdChildEventListener(childEventListener);
-//        textView.setText(String.valueOf(mydatabase.getReference().child("value").getKey().toString()));
-//            ChildEventListener childEventListener = new ChildEventListener() {
-//
-//                @Override
-//                public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-//                    Log.d("test", "onChildChanged:" + dataSnapshot.getKey());
-////
-//                // A data item has changed
-//                    EcPhclass message2 = dataSnapshot.getValue(EcPhclass.class);
-//                    textView.setText(String.valueOf(message2));
-////                    if(true){
-////                        EcPhlist = Collections.singletonList(message2);
-////                    }
-////
-////                    try {
-////                        Log.d("test112", String.valueOf(message));
-////
-////                    }catch (Exception e){
-////                        e.getMessage();
-////                    }
-//
-//                }
-//
-//                @Override
-//                public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-//
-//                }
-//
-//                @Override
-//                public void onChildRemoved(DataSnapshot dataSnapshot) {
-//
-//                }
-//
-//                @Override
-//                public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-//
-//                }
-//
-//                @Override
-//                public void onCancelled(DatabaseError databaseError) {
-//
-//                }
-//            };
-////            textView.setText(String.valueOf(EcPhlist));
-
     }
 
     @Override
@@ -165,22 +62,17 @@ public class FarmDetailActivity extends AppCompatActivity {
         super.onStart();
 
 
-        final GraphView graphView = (GraphView) findViewById(R.id.graph);
+        final GraphView graphView = (GraphView) findViewById(R.id.graph_ec);
+        graphView.setTitle("EC Graph");
+        final GraphView graphView2 = (GraphView) findViewById(R.id.graph_ph);
+        graphView2.setTitle("pH Graph");
         seriesec = new LineGraphSeries<DataPoint>();
+        seriesph = new LineGraphSeries<DataPoint>();
 
         mDatabase.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-//                String str = dataSnapshot.getKey();
-//                String str2 = (String) dataSnapshot.child(dataSnapshot.getKey()).getValue();
 
-//                for (DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
-//                    Log.v(TAG,""+ childDataSnapshot.getKey()); //displays the key for the node
-//                    Log.v(TAG,""+ childDataSnapshot.child("ec").getValue());   //gives the value for given keyname
-//                }
-//
-
-                int count = 0;
                 Date currentTime = Calendar.getInstance().getTime();
                 String curtime = String.valueOf(currentTime).substring(0,10);
                 for(DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
@@ -193,20 +85,22 @@ public class FarmDetailActivity extends AppCompatActivity {
                     }
                 }
                 DataPoint[] dataPoint = new DataPoint[ecPhlist.size()];
+                DataPoint[] dataPointPH = new DataPoint[ecPhlist.size()];
                 for(int i = 0 ; i < ecPhlist.size(); i++) {
                     EcPhclass a = ecPhlist.get(i);
                     double x = a.getEc();
+                    double p = a.getPh();
                     double y = Double.parseDouble((a.getTime().substring(11, 20).replace(":", "")));
                     y = y / 10000;
                     //dataPoint[i] = new DataPoint(x,y);
                     dataPoint[i] = new DataPoint(y,x);
+                    dataPointPH[i] = new DataPoint(y,p);
                 }
-                    //seriesec.appendData(new DataPoint(x, Double.parseDouble(y)),true,500);
-//                    seriesec.appendData(new DataPoint(x, y) ,true,ecPhlist.size());
-
 
                 seriesec = new LineGraphSeries<DataPoint>(dataPoint);
+                seriesph = new LineGraphSeries<DataPoint>(dataPointPH);
                 graphView.addSeries(seriesec);
+                graphView2.addSeries(seriesph);
 
             }
 
