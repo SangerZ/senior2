@@ -23,7 +23,8 @@
         <activity
             android:name=".FarmDetailActivity"
             android:label="@string/detail_farm"
-            android:parentActivityName=".MainActivity">
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="com.example.ratve.smartfarm.FarmDetailActivity" />
 
@@ -33,7 +34,17 @@
         <activity
             android:name=".HydroFarmDetailActivity"
             android:label="@string/title_activity_hydro_farm_detail"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar"
+            android:screenOrientation="portrait">
+
+        </activity>
+        <activity
+            android:name=".MainPop"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.CustomTheme">
+        </activity>
+
+
     </application>
 
 </manifest>

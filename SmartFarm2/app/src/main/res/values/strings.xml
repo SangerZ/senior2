@@ -2,4 +2,5 @@
     <string name="app_name">Smart Farm</string>
     <string name="detail_farm">Farm Detail</string>
     <string name="title_activity_hydro_farm_detail">HydroFarmDetailActivity</string>
+    <string name="add_new">Add new farm to the system</string>
 </resources>
