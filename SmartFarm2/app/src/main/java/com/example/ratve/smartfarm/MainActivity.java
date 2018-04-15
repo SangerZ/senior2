@@ -1,16 +1,22 @@
 package com.example.ratve.smartfarm;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.app.VoiceInteractor;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.renderscript.ScriptGroup;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.InputType;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -40,6 +46,10 @@ public class MainActivity extends AppCompatActivity {
     public String key = "5735451";
     FirebaseDatabase mydatabase = FirebaseDatabase.getInstance();
     DatabaseReference ref = FirebaseDatabase.getInstance().getReference(key);
+
+    EditText userInput;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
                 boolean HighECAlert = (boolean) dataSnapshot.child("highECAlert").getValue();
                 boolean lowpHAlert = (boolean) dataSnapshot.child("lowpHAlert").getValue();
 
+
                 try {
                     Farm farm = new Farm(key,name,HighECAlert,lowpHAlert);
                     farmList = Collections.singletonList(farm);
@@ -76,6 +87,8 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         ref.addValueEventListener(postListener);
+
+
     }
 
     @Override
@@ -86,11 +99,32 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item){
+        final AlertDialog alertDialog;
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("New Farm Insertion");
+        builder.setMessage("Please type the farm number that you want to add");
 
+        userInput = new EditText(this);
+        userInput.setInputType(InputType.TYPE_CLASS_NUMBER);
+        builder.setView(userInput);
+        builder.setPositiveButton("Submit", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String txt = userInput.getText().toString();
+                Toast.makeText(getApplicationContext(), txt, Toast.LENGTH_SHORT).show();
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        alertDialog = builder.create();
         switch(item.getItemId()){
 
             case R.id.add_new:
-                startActivity(new Intent(MainActivity.this, MainPop.class));
+                alertDialog.show();
                 return true;
         }
         return super.onOptionsItemSelected(item);
