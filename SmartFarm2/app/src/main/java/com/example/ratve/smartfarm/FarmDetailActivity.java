@@ -61,17 +61,6 @@ public class FarmDetailActivity extends AppCompatActivity {
     EditText nameInput;
     EditText volumeInput;
 
-
-    public String getMonthForInt(int m) {
-        String month = "invalid";
-        DateFormatSymbols dfs = new DateFormatSymbols();
-        String[] months = dfs.getMonths();
-        if (m >= 0 && m <= 11 ) {
-            month = months[m];
-        }
-        return month;
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -157,12 +146,23 @@ public class FarmDetailActivity extends AppCompatActivity {
             int y = calendar.get(Calendar.YEAR);
             int m = calendar.get(Calendar.MONTH);
             int d = calendar.get(Calendar.DAY_OF_MONTH);
-            DatePickerDialog dialog = new DatePickerDialog(FarmDetailActivity.this,android.R.style.Theme_Holo_Dialog_MinWidth,
-                    datepicker,y,m,d);
+            DatePickerDialog dialog = new DatePickerDialog(
+                    FarmDetailActivity.this,
+                    android.R.style.Theme_Holo_Dialog_MinWidth
+                    , datepicker
+                    , y, m, d);
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             dialog.show();
-//            Toast.makeText(makeTextthis,"test2",Toast.LENGTH_SHORT).show();
         }
+        datepicker = new DatePickerDialog.OnDateSetListener() {
+            @Override
+            public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+                month = month + 1;
+
+                String date = month + "/" + dayOfMonth + "/" + year;
+                Toast.makeText(FarmDetailActivity.this, date, Toast.LENGTH_SHORT).show();
+            }
+        };
 //        datepicker = new DatePickerDialog.OnDateSetListener() {
 //            @TargetApi(Build.VERSION_CODES.O)
 //            @Override
@@ -195,8 +195,8 @@ public class FarmDetailActivity extends AppCompatActivity {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
 
-                Date currentTime = Calendar.getInstance().getTime();
-                String curtime = String.valueOf(currentTime).substring(0,10);
+                currentTime = Calendar.getInstance().getTime();
+                curtime = String.valueOf(currentTime).substring(0,10);
                 for(DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
                     EcPhclass ecPhclass = childDataSnapshot.getValue(EcPhclass.class);
                     Log.d("test1335", ecPhclass.time.substring(0, 10));
