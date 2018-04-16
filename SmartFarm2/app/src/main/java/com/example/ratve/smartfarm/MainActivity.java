@@ -3,6 +3,7 @@ package com.example.ratve.smartfarm;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.app.VoiceInteractor;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.renderscript.ScriptGroup;
@@ -34,29 +35,46 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private RecyclerView.Adapter adapter;
-    private List<Farm> farmList;
+    private List<Farm> farmList = new ArrayList<Farm>();
 
-    public String key = "5735451";
+    public String[] key = {"5735451","5812345"};
+    List<String> fileFarmList;// = new ArrayList<String>();
     FirebaseDatabase mydatabase = FirebaseDatabase.getInstance();
-    DatabaseReference ref = FirebaseDatabase.getInstance().getReference(key);
+    DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
 
+    String mkey = "";
+    Farm farm;
     EditText userInput;
+    private static final String fileName = "file.txt";
 
+    File file;// = new File(fileName);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //Toolbar toolbar = (Toolbar) findViewById(R.id.main_toolbar);
-        //setSupportActionBar(toolbar);
+        File fileDir = this.getFilesDir();
+        file = new File(fileDir, fileName);
+        if(!file.exists()){
+            file = new File(this.getFilesDir(), fileName);
+        }
+        else{
+            readFile(fileName);
+        }
 
         recyclerView = (RecyclerView) findViewById(R.id.my_recycler_view);
         recyclerView.setHasFixedSize(true);
@@ -65,17 +83,18 @@ public class MainActivity extends AppCompatActivity {
         ValueEventListener postListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                String name = (String) dataSnapshot.child("Name").getValue();
-                boolean HighECAlert = (boolean) dataSnapshot.child("highECAlert").getValue();
-                boolean lowpHAlert = (boolean) dataSnapshot.child("lowpHAlert").getValue();
+                try{
+
+                    String name = (String) dataSnapshot.child("Name").getValue();
+                    boolean HighECAlert = (boolean) dataSnapshot.child("highECAlert").getValue();
+                    boolean lowpHAlert = (boolean) dataSnapshot.child("lowpHAlert").getValue();
+                    farm = new Farm(mkey,name,HighECAlert,lowpHAlert);
+                    farmList.add(farm);
 
 
-                try {
-                    Farm farm = new Farm(key,name,HighECAlert,lowpHAlert);
-                    farmList = Collections.singletonList(farm);
-                    Log.d("test112",farm.getKey());
                     adapter = new FarmAdapter(getApplicationContext(), farmList);
                     recyclerView.setAdapter(adapter);
+
                 }catch (Exception e){
                     e.getMessage();
                 }
@@ -86,8 +105,14 @@ public class MainActivity extends AppCompatActivity {
 
             }
         };
-        ref.addValueEventListener(postListener);
 
+        if(fileFarmList != null) {
+            for (int i = 0; i < fileFarmList.size(); i++) {
+                mkey = fileFarmList.get(i);
+                ref = FirebaseDatabase.getInstance().getReference(fileFarmList.get(i));
+                ref.addValueEventListener(postListener);
+            }
+        }
 
     }
 
@@ -111,7 +136,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 String txt = userInput.getText().toString();
-                Toast.makeText(getApplicationContext(), txt, Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getApplicationContext(), txt, Toast.LENGTH_SHORT).show();
+                saveFile(fileName, txt);
+
+                Intent intent = getIntent();
+                finish();
+                startActivity(intent);
             }
         });
         builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -128,5 +158,39 @@ public class MainActivity extends AppCompatActivity {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+
+    public void saveFile(String file, String text){
+        String submitting = "\r\n" + text;
+        try{
+            FileOutputStream fos = openFileOutput(file, Context.MODE_APPEND);
+            //FileOutputStream fos = openFileOutput(file, );
+            fos.write(submitting.getBytes());
+            //fos.write
+            fos.close();
+            Toast.makeText(MainActivity.this, "Save success", Toast.LENGTH_SHORT).show();
+        }catch (Exception e){
+            e.printStackTrace();
+            Toast.makeText(MainActivity.this, "Error saving file", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void readFile(String file){
+
+        String text = "";
+        try{
+            FileInputStream fis = openFileInput(file);
+            int size = fis.available();
+            byte[] buffer = new byte[size];
+            fis.read(buffer);
+            fis.close();
+            text = new String(buffer);
+            fileFarmList = new ArrayList<String>(Arrays.asList(text.split("\r\n")));
+            //Toast.makeText(MainActivity.this, fileFarmList.get(0), Toast.LENGTH_LONG).show();
+
+        }catch (Exception e){
+            Toast.makeText(MainActivity.this, "Error reading file", Toast.LENGTH_SHORT).show();
+        }
     }
 }

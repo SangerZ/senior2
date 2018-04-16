@@ -55,6 +55,7 @@ public class FarmDetailActivity extends AppCompatActivity {
     Date currentTime = Calendar.getInstance().getTime();
     String curtime = String.valueOf(currentTime).substring(0,10);
     String test = "";
+    String message = "";
 
     EditText ecInput;
     EditText phInput;
@@ -68,7 +69,7 @@ public class FarmDetailActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_farm_detail);
         Intent intent = getIntent();
-        String message = intent.getExtras().getString("FarmName");
+        message = intent.getExtras().getString("FarmName");
 
         mDatabase = FirebaseDatabase.getInstance().getReference().child(message + "Data");
 
@@ -106,8 +107,8 @@ public class FarmDetailActivity extends AppCompatActivity {
 
 
             volumeInput.setInputType(InputType.TYPE_CLASS_NUMBER);
-            ecInput.setInputType(InputType.TYPE_CLASS_NUMBER);
-            phInput.setInputType(InputType.TYPE_CLASS_NUMBER);
+            ecInput.setInputType(InputType.TYPE_NUMBER_FLAG_DECIMAL);
+            phInput.setInputType(InputType.TYPE_NUMBER_FLAG_DECIMAL);
 
 
             Context ctx = this;
@@ -120,15 +121,11 @@ public class FarmDetailActivity extends AppCompatActivity {
 
             builder.setView(layout);
 
-//            builder.setView(nameInput);
-//            builder.setView(volumeInput);
-//            builder.setView(phInput);
-//            builder.setView(ecInput);
-
             builder.setPositiveButton("Submit", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-
+                    updateConfiguration(nameInput.getText().toString(), Integer.parseInt(volumeInput.getText().toString()), Float.parseFloat(phInput.getText().toString()), Float.parseFloat(ecInput.getText().toString()));
+                    dialog.dismiss();
                 }
             });
             builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -163,19 +160,7 @@ public class FarmDetailActivity extends AppCompatActivity {
                 Toast.makeText(FarmDetailActivity.this, date, Toast.LENGTH_SHORT).show();
             }
         };
-//        datepicker = new DatePickerDialog.OnDateSetListener() {
-//            @TargetApi(Build.VERSION_CODES.O)
-//            @Override
-//            public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-//
-//                DayOfWeek dt = LocalDate.of(year,month,dayOfMonth).getDayOfWeek();
-//                curtime = String.valueOf(dt).substring(0,3)+ " "+ getMonthForInt(month).substring(0,3) +" "+ dayOfMonth ;
-//                ; // yourdate is an object of type Date
-//
-//                Toast.makeText(FarmDetailActivity.this, curtime, Toast.LENGTH_SHORT).show();
-//                onStart();
-//            }
-//        };
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -248,6 +233,14 @@ public class FarmDetailActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    private void updateConfiguration(String name, int volume, float ph, float ec){
+
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference().child(message);
+
+        Farm farm = new Farm(name, volume, ph, ec);
+        databaseReference.setValue(farm);
     }
 
 }
