@@ -55,7 +55,6 @@ public class MainActivity extends AppCompatActivity {
     FirebaseDatabase mydatabase = FirebaseDatabase.getInstance();
     DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
 
-    String mkey = "";
     Farm farm;
     EditText userInput;
     private static final String fileName = "file.txt";
@@ -84,11 +83,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 try{
-
-                    String name = (String) dataSnapshot.child("Name").getValue();
+                    String name = (String) dataSnapshot.child("name").getValue();
                     boolean HighECAlert = (boolean) dataSnapshot.child("highECAlert").getValue();
                     boolean lowpHAlert = (boolean) dataSnapshot.child("lowpHAlert").getValue();
-                    farm = new Farm(mkey,name,HighECAlert,lowpHAlert);
+                    farm = new Farm(dataSnapshot.getKey(),name,HighECAlert,lowpHAlert);
                     farmList.add(farm);
 
 
@@ -108,7 +106,6 @@ public class MainActivity extends AppCompatActivity {
 
         if(fileFarmList != null) {
             for (int i = 0; i < fileFarmList.size(); i++) {
-                mkey = fileFarmList.get(i);
                 ref = FirebaseDatabase.getInstance().getReference(fileFarmList.get(i));
                 ref.addValueEventListener(postListener);
             }
