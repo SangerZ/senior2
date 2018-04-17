@@ -119,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item){
         final AlertDialog alertDialog;
@@ -134,7 +135,23 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 String txt = userInput.getText().toString();
                 //Toast.makeText(getApplicationContext(), txt, Toast.LENGTH_SHORT).show();
-                saveFile(fileName, txt);
+                Boolean check = false;
+                if(fileFarmList != null){
+                    for (int i = 0; i < fileFarmList.size(); i++) {
+                        if(txt.equals(fileFarmList.get(i))){
+                            check = true;
+                            break;
+                        }
+                    }
+
+                }
+                if (check){
+                    Toast.makeText(getApplicationContext(), txt + " is exist ", Toast.LENGTH_SHORT).show();
+                }else {
+
+                    saveFile(fileName, txt);
+                }
+
 
                 Intent intent = getIntent();
                 finish();

@@ -65,16 +65,11 @@ public class FarmDetailActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //mDatabase = FirebaseDatabase.getInstance().getReference().child("5735451Data/value");
-
         setContentView(R.layout.activity_farm_detail);
         Intent intent = getIntent();
         message = intent.getExtras().getString("FarmName");
-
         mDatabase = FirebaseDatabase.getInstance().getReference().child(message + "Data");
-
         ref = FirebaseDatabase.getInstance().getReference().child("value");
-
     }
 
     @Override
@@ -104,12 +99,9 @@ public class FarmDetailActivity extends AppCompatActivity {
             phInput.setText("ph");
             ecInput.setText("ec");
 
-
-
             volumeInput.setInputType(InputType.TYPE_CLASS_NUMBER);
             ecInput.setInputType(InputType.TYPE_NUMBER_FLAG_DECIMAL);
             phInput.setInputType(InputType.TYPE_NUMBER_FLAG_DECIMAL);
-
 
             Context ctx = this;
             LinearLayout layout = new LinearLayout(ctx);
@@ -124,7 +116,10 @@ public class FarmDetailActivity extends AppCompatActivity {
             builder.setPositiveButton("Submit", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    updateConfiguration(nameInput.getText().toString(), Integer.parseInt(volumeInput.getText().toString()), Float.parseFloat(phInput.getText().toString()), Float.parseFloat(ecInput.getText().toString()));
+                    updateConfiguration(nameInput.getText().toString(),
+                            Integer.parseInt(volumeInput.getText().toString()),
+                            Float.parseFloat(phInput.getText().toString()),
+                            Float.parseFloat(ecInput.getText().toString()));
                     dialog.dismiss();
                 }
             });
@@ -148,6 +143,7 @@ public class FarmDetailActivity extends AppCompatActivity {
                     android.R.style.Theme_Holo_Dialog_MinWidth
                     , datepicker
                     , y, m, d);
+            dialog.getDatePicker().setMaxDate(new Date().getTime());
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             dialog.show();
         }
@@ -168,7 +164,6 @@ public class FarmDetailActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
-
         final GraphView graphView = (GraphView) findViewById(R.id.graph_ec);
         graphView.setTitle("EC Graph");
         final GraphView graphView2 = (GraphView) findViewById(R.id.graph_ph);
@@ -188,7 +183,6 @@ public class FarmDetailActivity extends AppCompatActivity {
                     String strtime = ecPhclass.time.substring(0, 10);
                     if (strtime.equals(curtime)) {
                         ecPhlist.add(ecPhclass);
-
                     }
                 }
                 DataPoint[] dataPoint = new DataPoint[ecPhlist.size()];
@@ -208,7 +202,6 @@ public class FarmDetailActivity extends AppCompatActivity {
                 seriesph = new LineGraphSeries<DataPoint>(dataPointPH);
                 graphView.addSeries(seriesec);
                 graphView2.addSeries(seriesph);
-
             }
 
 
@@ -232,13 +225,11 @@ public class FarmDetailActivity extends AppCompatActivity {
 
             }
         });
-
     }
 
     private void updateConfiguration(String name, int volume, float ph, float ec){
 
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference().child(message);
-
         Farm farm = new Farm(name, volume, ph, ec);
         databaseReference.setValue(farm);
     }
