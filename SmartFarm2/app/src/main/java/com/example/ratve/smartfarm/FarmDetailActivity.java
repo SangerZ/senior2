@@ -52,6 +52,7 @@ public class FarmDetailActivity extends AppCompatActivity {
     DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
 
     final List<EcPhclass> ecPhlist = new ArrayList<EcPhclass>();
+    String datepickerDate = "";
     Date currentTime = Calendar.getInstance().getTime();
     String curtime = String.valueOf(currentTime).substring(0,10);
     String test = "";
@@ -61,6 +62,77 @@ public class FarmDetailActivity extends AppCompatActivity {
     EditText phInput;
     EditText nameInput;
     EditText volumeInput;
+    
+    public String monthChange(int month){
+        String answer = "";
+        switch (month){
+            case 1:
+                answer = "Jan";
+                break;
+            case 2:
+                answer = "Feb";
+                break;
+            case 3:
+                answer = "Mar";
+                break;
+            case 4:
+                answer = "Apr";
+                break;
+            case 5:
+                answer = "May";
+                break;
+            case 6:
+                answer = "Jun";
+                break;
+            case 7:
+                answer = "Jul";
+                break;
+            case 8:
+                answer = "Aug";
+                break;
+            case 9:
+                answer = "Sep";
+                break;
+            case 10:
+                answer = "Oct";
+                break;
+            case 11:
+                answer = "Nov";
+                break;
+            case 12:
+                answer = "Dec";
+                break;
+        }
+        return answer;
+    }
+
+    public String dayOfWeekChange(int day){
+        String answer = "";
+        switch(day){
+            case 0:
+                answer = "Sat";
+                break;
+            case 1:
+                answer = "Sun";
+                break;
+            case 2:
+                answer = "Mon";
+                break;
+            case 3:
+                answer = "Tue";
+                break;
+            case 4:
+                answer = "Wed";
+                break;
+            case 5:
+                answer = "Thu";
+                break;
+            case 6:
+                answer = "Fri";
+                break;
+        }
+        return answer;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -150,10 +222,14 @@ public class FarmDetailActivity extends AppCompatActivity {
         datepicker = new DatePickerDialog.OnDateSetListener() {
             @Override
             public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+                Date date = new Date(year, month, dayOfMonth);
+                int day = date.getDay();
                 month = month + 1;
-
-                String date = month + "/" + dayOfMonth + "/" + year;
-                Toast.makeText(FarmDetailActivity.this, date, Toast.LENGTH_SHORT).show();
+                String monthStr = monthChange(month);
+                String dayOfWeek = dayOfWeekChange(day);
+                //datepickerDate = monthStr + "/" + dayOfMonth + "/" + year + "/" + dayOfWeek;
+                datepickerDate = dayOfWeek + " " + monthStr + " " + dayOfMonth;
+                Toast.makeText(FarmDetailActivity.this, datepickerDate, Toast.LENGTH_SHORT).show();
             }
         };
 
