@@ -99,7 +99,7 @@ void checkPH() {
     NodeSerial.println(4);
     //fill to reach the threshold
     float remaining  = phBar - phTemp;
-    int duration = int(remaining * volume * 1000);//need to fix this as this prob is the wrong formula
+    int duration = int(remaining * volume * 10000);//need to fix this as this prob is the wrong formula
     digitalWrite(PUMP_C, LOW);
     delay(duration);
     digitalWrite(PUMP_C, HIGH);
@@ -132,7 +132,7 @@ void checkEC() {
     NodeSerial.println(6);
     //fill
     float remaining = (((ecBar - ecGet) / 0.36) - 0.5) * volume;
-    int duration = int(remaining * 1000);//this is still wrong. need to find out the speed of the doser pump
+    int duration = int(remaining * 10000);//this is still wrong. need to find out the speed of the doser pump
 
     digitalWrite(PUMP_A, LOW);
     delay(duration);
@@ -244,12 +244,13 @@ int dst = 0;
   Serial.println();
   Serial.println();
   Serial.println("NodeMCU/ESP8266 Run");
-  int tickEvent = t.every(10000, checkWaterQuality);
+  int tickEvent = t.every(100000, checkWaterQuality);
   //int tickEvent = t.every(900000, checkWaterQuality);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
+
   checkFirebase();
   t.update();
 }
