@@ -49,15 +49,22 @@ void checkFirebase() {
   //check wifi status first
   if (WiFi.status() == WL_CONNECTED) {
     FirebaseObject firebasePeek = Firebase.get("/5735451");
-    phPeek = firebasePeek.getFloat("pHTreshold");
-    ecPeek = firebasePeek.getFloat("ecThreshold");
-    volumePeek = firebasePeek.getInt("Volume");
+    phPeek = firebasePeek.getFloat("phTreshold");
+    ecPeek = firebasePeek.getFloat("ecTreshold");
+    volumePeek = firebasePeek.getInt("volume");
 
+//    Serial.print("phPeek ");
+//    Serial.println(phPeek);
+//    Serial.print("ecPeek ");
+//    Serial.println(ecPeek);
+    
     if (phPeek != phBar) {
       phBar = phPeek;
+      Serial.println(phBar);
     }
     if (ecPeek != ecBar) {
       ecBar = ecPeek;
+      Serial.println(ecBar);
     }
     if (volumePeek != volume) {
       volume = volumePeek;
@@ -79,13 +86,11 @@ void checkPH() {
     phTemp = NodeSerial.parseFloat();
     Serial.print("ph : ");
     Serial.println(phTemp);
-    if (phTemp != 0.0) {
-      break;
-    }
   }
   phGet = phTemp;
-  phTemp = 0.0;
-  if (phGet < phBar - 0.5) {
+  phTemp = -1.0;
+  if (phGet < phBar) {
+    Serial.println("pH is too damn low");
     if (WiFi.status() == WL_CONNECTED) {
       Firebase.set("/5735451/lowpHAlert", true);
     }
@@ -99,7 +104,7 @@ void checkPH() {
     NodeSerial.println(4);
     //fill to reach the threshold
     float remaining  = phBar - phTemp;
-    int duration = int(remaining * volume * 10000);//need to fix this as this prob is the wrong formula
+    int duration = int(remaining * volume * 100);//need to fix this as this prob is the wrong formula
     digitalWrite(PUMP_C, LOW);
     delay(duration);
     digitalWrite(PUMP_C, HIGH);
@@ -118,22 +123,31 @@ void checkEC() {
     ecTemp = NodeSerial.parseFloat();
     Serial.print("ec : ");
     Serial.println(ecTemp);
-    if (ecTemp != 0.0) {
-      break;
-    }
   }
+  Serial.println("escape ec while");
   ecGet = ecTemp;
-  ecTemp = 0.0;
+  ecTemp = -1.0;
+  Serial.print("ecGet ");
+  Serial.println(ecGet);
+  Serial.print("ecBar ");
+  Serial.println(ecBar);
   if (ecGet < ecBar) {//not enough nutrient
     // set ec alarm to false
     if (WiFi.status() == WL_CONNECTED) {
       Firebase.set("/5735451/highECAlert", false);
     }
     NodeSerial.println(6);
+    Serial.println("about to fill the nutrients");
     //fill
-    float remaining = (((ecBar - ecGet) / 0.36) - 0.5) * volume;
-    int duration = int(remaining * 10000);//this is still wrong. need to find out the speed of the doser pump
+    //float remaining = (ecBar - ecGet) * (float)volume;
+    float remaining  = ecBar - ecGet;
+    int duration = int(remaining * 100 * volume);//this is still wrong. need to find out the speed of the doser pump
 
+    Serial.print(remaining);
+    Serial.print(" ");
+    Serial.println(duration);
+
+    
     digitalWrite(PUMP_A, LOW);
     delay(duration);
     digitalWrite(PUMP_A, HIGH);
@@ -210,13 +224,13 @@ void setup() {
   Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
   //check for preexisting branch of this device
   FirebaseObject flagCheck = Firebase.get("/5735451");
-  String flagCheckName = flagCheck.getString("Name");
+  String flagCheckName = flagCheck.getString("name");
   Serial.println("flagCheckName is : " + flagCheckName);
   if (flagCheckName.equals('\0')) {
-    Firebase.set("/5735451/Name", "defaultFarm");
-    Firebase.set("/5735451/Volume", "300");
-    Firebase.set("/5735451/ecThreshold", "1.5");
-    Firebase.set("/5735451/pHThreshold", "6.0");
+    Firebase.set("/5735451/name", "defaultFarm");
+    Firebase.set("/5735451/volume", 300);
+    Firebase.set("/5735451/ecTreshold", 1.5);
+    Firebase.set("/5735451/phTreshold", 6.0);
     Firebase.set("/5735451/lowpHAlert", false);
     Firebase.set("/5735451/highECAlert", false);
     Serial.println("set the farm");
