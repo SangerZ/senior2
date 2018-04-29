@@ -400,15 +400,15 @@ void loop() {
     int cmd = NanoSerial.parseInt();
     switch (cmd) {
       case 1://check ph
-        //ph = 6.0;
-        ph = phMeasure();
+        ph = 8.0;
+        //ph = phMeasure();
         NanoSerial.println(ph);
         break;
       case 2://check ec
-        //ec = 1.7;
-        digitalWrite(LED_BUILTIN, HIGH);
+        ec = 1.2;
+        //digitalWrite(LED_BUILTIN, HIGH);
         //digitalWrite(12, HIGH);
-        ec = ecMeasure();
+        //ec = ecMeasure();
         digitalWrite(LED_BUILTIN, LOW);
         //digitalWrite(12, LOW);
         NanoSerial.println(ec);
