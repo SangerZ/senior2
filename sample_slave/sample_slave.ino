@@ -11,9 +11,9 @@ NanoSerial.begin(57600);
 }
 
 void loop() {
-Serial.print(i_data); Serial.print(“\t”);
+Serial.print(i_data); Serial.print("\t");
 Serial.println(f_data);
-NanoSerial.print(i_data); NanoSerial.print(” “);
-NanoSerial.print(f_data); NanoSerial.print(“\n”);
+NanoSerial.print(i_data); NanoSerial.print(" ");
+NanoSerial.print(f_data); NanoSerial.print("\n");
 delay(100);
 }

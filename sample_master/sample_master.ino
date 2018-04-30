@@ -9,7 +9,7 @@ void setup() {
   NodeSerial.begin(57600);
   Serial.println();
   Serial.println();
-  Serial.println(“NodeMCU / ESP8266 Run”);
+  Serial.println("NodeMCU / ESP8266 Run");
 }
 
 void loop() {
@@ -17,9 +17,9 @@ void loop() {
 
     int i_data = NodeSerial.parseInt();
     float f_data = NodeSerial.parseFloat();
-    if (NodeSerial.read() == ‘\n’) {
-      Serial.print(“NodeMCU or ESP8266″); Serial.print(” : “);
-      Serial.print(i_data); Serial.print(” : “);
+    if (NodeSerial.read() == '\n') {
+      Serial.print("NodeMCU or ESP8266"); Serial.print(" : ");
+      Serial.print(i_data); Serial.print(" : ");
       Serial.println(f_data);
     }
     delay(50);
