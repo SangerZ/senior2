@@ -75,6 +75,21 @@ while True:
            print("fail")
 
         db.close()
+
+        #history db
+        hdb = pymysql.connect("localhost","root","009564","Status" )
+        cursor2 = hdb.cursor()
+        sql = "INSERT INTO ecphHistory (id, time, ec, ph) VALUES (NULL, CURRENT_TIMESTAMP, "+ ecStr +", "+ phStr +")"
+        try:
+           cursor.execute(sql)
+           hdb.commit()
+           print("finish")
+
+        except:
+           hdb.rollback()
+           print("fail")
+
+        hdb.close()
         
 
 
