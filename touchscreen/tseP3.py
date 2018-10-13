@@ -68,7 +68,7 @@ class StatusPage(tk.Frame):
                       width = 15, height = 7, pady = 7, font = ("Helvetica, 10"))
         btn3.grid(row = 2, column = 0, sticky = 'w')
 
-        btn4 = tk.Button(leftFrame, text = "Connection", command=lambda: controller.show_frame("ConnectionPage"),
+        btn4 = tk.Button(leftFrame, text = "About", command=lambda: controller.show_frame("ConnectionPage"),
                       width = 15, height = 7, pady = 7, font = ("Helvetica, 10"))
         btn4.grid(row = 3, column = 0, sticky = 'w')
 
@@ -136,7 +136,7 @@ class SettingPage(tk.Frame):
                       width = 15, height = 7, pady = 7, font = ("Helvetica, 10"))
         btn3.grid(row = 2, column = 0, sticky = 'w')
 
-        btn4 = tk.Button(leftFrame, text = "Connection", command=lambda: controller.show_frame("ConnectionPage"),
+        btn4 = tk.Button(leftFrame, text = "About", command=lambda: controller.show_frame("ConnectionPage"),
                       width = 15, height = 7, pady = 7, font = ("Helvetica, 10"))
         btn4.grid(row = 3, column = 0, sticky = 'w')
 
@@ -202,8 +202,8 @@ class RecalibratePage(tk.Frame):
     phCounter1 = 0
     global ecText
     global phText
-    phText = ["Start Calibrate pH", "pH 4 Solution", "pH 8 Solution", "Finish"]
-    ecText = ["Start Calibrate EC", "EC 1.4 Solution", "EC 12.8 Solution", "Finish"]
+    phText = ["Start Calibrate pH", "pH 4 Solution", "Finish"]
+    ecText = ["Start Calibrate EC", "EC 12.8 Solution", "Finish"]
 
     def __init__(self, parent, controller):
         global ecCounter1, phCounter1, ecText, phText
@@ -227,7 +227,7 @@ class RecalibratePage(tk.Frame):
                       width = 15, height = 7, pady = 7, font = ("Helvetica, 10"))
         btn3.grid(row = 2, column = 0, sticky = 'w')
 
-        btn4 = tk.Button(leftFrame, text = "Connection", command=lambda: controller.show_frame("ConnectionPage"),
+        btn4 = tk.Button(leftFrame, text = "About", command=lambda: controller.show_frame("ConnectionPage"),
                       width = 15, height = 7, pady = 7, font = ("Helvetica, 10"))
         btn4.grid(row = 3, column = 0, sticky = 'w')
 
@@ -261,11 +261,9 @@ class RecalibratePage(tk.Frame):
                 ecCounter1 = 2
                 ecStatus.config(text = ecText[ecCounter1])
             elif ecCounter1 == 2:
-                ecCounter1 = 3
-                ecStatus.config(text = ecText[ecCounter1])
-            elif ecCounter1 == 3:
                 ecCounter1 = 0
-                ecStatus.config(text = ecText[phCounter1])               
+                ecStatus.config(text = ecText[ecCounter1])
+              
             
         def setpHText():
             global phCounter1, phText
@@ -276,11 +274,9 @@ class RecalibratePage(tk.Frame):
                 phCounter1 = 2
                 phStatus.config(text = phText[phCounter1])
             elif phCounter1 == 2:
-                phCounter1 = 3
-                phStatus.config(text = phText[phCounter1])
-            elif phCounter1 == 3:
                 phCounter1 = 0
                 phStatus.config(text = phText[phCounter1])
+
                 
         
         ecBtn = tk.Button(rightFrame, text = "Proceed", font = ("Helvetica, 13"), command = setecText)
@@ -314,7 +310,7 @@ class ConnectionPage(tk.Frame):
                       width = 15, height = 7, pady = 7, font = ("Helvetica, 10"))
         btn3.grid(row = 2, column = 0, sticky = 'w')
 
-        btn4 = tk.Button(leftFrame, text = "Connection", 
+        btn4 = tk.Button(leftFrame, text = "About", 
                       width = 15, height = 7, pady = 7, font = ("Helvetica, 10"))
         btn4.grid(row = 3, column = 0, sticky = 'w')
         
