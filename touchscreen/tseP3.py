@@ -115,9 +115,34 @@ class StatusPage(tk.Frame):
 
 class SettingPage(tk.Frame):
 
+    volumeFarm = 0
+    ecT = 0
+    phT = 0
+    ecI = 0
+    phI = 0
+    
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
+
+        db = pymysql.connect("localhost", "root", "009564", "Status")
+        cursor = db.cursor()
+        sql= "SELECT * FROM farmConfig"
+        try:
+            cursor.execute(sql)
+            result = cursor.fetchone()
+            volumeFarm = result[2]
+            ecT = result[3]
+            phT = result[4]
+            ecI = result[5]
+            phI = result[6]
+        except:
+            volumeFarm = 0
+            ecT = 0
+            phT = 0
+            ecI = 0
+            phI = 0
+        db.close()
 
         leftFrame = tk.Frame(self, bg = 'cyan', width = 100, height = 100)
         rightFrame = tk.Frame(self, width = 100, height = 100)
@@ -152,11 +177,11 @@ class SettingPage(tk.Frame):
         ecIntensityLabel.grid(row = 3, column = 0, sticky = 'w', ipady = 3)
         phIntensityLabel.grid(row = 4, column = 0, sticky = 'w', ipady = 3)
 
-        volumeEntry = tk.Label(rightFrame, text = 0, font = ("Helvetica, 13"), width = 15, bg = "#FFFFFF")
-        ecThresholdEntry = tk.Label(rightFrame, text = 0, font = ("Helvetica, 13"), width = 15, bg = "#FFFFFF")
-        phThresholdEntry = tk.Label(rightFrame, text = 0, font = ("Helvetica, 13"), width = 15, bg = "#FFFFFF")
-        ecIntensityEntry = tk.Label(rightFrame, text = 0, font = ("Helvetica, 13"), width = 15, bg = "#FFFFFF")
-        phIntensityEntry = tk.Label(rightFrame, text = 0, font = ("Helvetica, 13"), width = 15, bg = "#FFFFFF")
+        volumeEntry = tk.Label(rightFrame, text = volumeFarm, font = ("Helvetica, 13"), width = 15, bg = "#FFFFFF")
+        ecThresholdEntry = tk.Label(rightFrame, text = ecT, font = ("Helvetica, 13"), width = 15, bg = "#FFFFFF")
+        phThresholdEntry = tk.Label(rightFrame, text = phT, font = ("Helvetica, 13"), width = 15, bg = "#FFFFFF")
+        ecIntensityEntry = tk.Label(rightFrame, text = ecI, font = ("Helvetica, 13"), width = 15, bg = "#FFFFFF")
+        phIntensityEntry = tk.Label(rightFrame, text = phI, font = ("Helvetica, 13"), width = 15, bg = "#FFFFFF")
 
         volumeEntry.grid(row = 0, column = 1, padx = 10, pady = 5)
         ecThresholdEntry.grid(row = 1, column = 1, padx = 10, pady = 5)
@@ -164,7 +189,7 @@ class SettingPage(tk.Frame):
         ecIntensityEntry.grid(row = 3, column = 1, padx = 10, pady = 5)
         phIntensityEntry.grid(row = 4, column = 1, padx = 10, pady = 5)
 
-        volumeScale = tk.Scale(rightFrame, orient = 'horizontal', from_ = 40, to = 300, width = 20, length = 200)
+        volumeScale = tk.Scale(rightFrame, orient = 'horizontal', from_ = 100, to = 1000, width = 20, length = 200)
         ecThresholdScale = tk.Scale(rightFrame, orient = 'horizontal', from_ = 1.0, to = 5.0, resolution = 0.1, width = 20, length = 200)
         phThresholdScale = tk.Scale(rightFrame, orient = 'horizontal', from_ = 3.0, to = 8.0, resolution = 0.1, width = 20, length = 200)
         ecIntensityScale = tk.Scale(rightFrame, orient = 'horizontal', from_ = 0, to = 100, resolution = 0.1, width = 20, length = 200)
@@ -188,6 +213,16 @@ class SettingPage(tk.Frame):
             phThresholdEntry.config(text = pht)
             ecIntensityEntry.config(text = eci)
             phIntensityEntry.config(text = phi)
+
+            db = pymysql.connect("localhost", "root", "009564", "Status")
+            cursor = db.cursor()
+            sql= "UPDATE farmConfig SET volume = "+str(vol)+", ec = "+str(ect)+", ph = "+str(pht)+", ecIntensity = "+str(eci)+", phIntensity = "+str(phi)+"WHERE 1"
+            try:
+                cursor.execute(sql)
+                db.commit()
+            except:
+                db.rollback()
+            db.close()
             
             return
 

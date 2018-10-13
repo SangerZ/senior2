@@ -81,13 +81,13 @@ while True:
         cursor2 = hdb.cursor()
         sql = "INSERT INTO ecphHistory (id, time, ec, ph) VALUES (NULL, CURRENT_TIMESTAMP, "+ ecStr +", "+ phStr +")"
         try:
-           cursor.execute(sql)
+           cursor2.execute(sql)
            hdb.commit()
-           print("finish")
+           print("finish2")
 
         except:
            hdb.rollback()
-           print("fail")
+           print("fail2")
 
         hdb.close()
         
