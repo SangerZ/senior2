@@ -1,8 +1,9 @@
 import time as t
 import os
 from firebase import firebase
-import datetime
+from datetime import datetime, timedelta
 import pymysql
+import json
 
 farmID = ""
 farmName = ""
@@ -32,6 +33,7 @@ def dataStd():
         phI = result[6]
         ecA = result[7]
         phA = result[8]
+        print(result)#
     except:
         farmID = ""
         farmName = ""
@@ -46,9 +48,9 @@ def dataStd():
 
 def getFromFB():
     global farmID, farmName, volumeFarm, ecT, phT, ecI, phI, ecA, phA
-
+    print(farmID)
     fb = firebase.FirebaseApplication('https://thesmartfarm-7f3a5.firebaseio.com', None)
-    res = fb.get(farmID, None)
+    res = fb.get(str(farmID), None)
     
     getName = res['name']
     getECThreshold = res['ecTreshold']
@@ -57,67 +59,90 @@ def getFromFB():
     getPHIntensity = res['pHIntensity']
     getHighECAlert = res['highECAlert']
     getLowPHAlert = res['lowpHAlert']
-    getVolume = res['volume'] 
+    getVolume = res['volume']
+    print(res)
+    theECA = 0
+    thePHA = 0
 
+    if(getHighECAlert):
+        theECA = 1
+    else:
+        theECA = 0
+    if(getLowPHAlert):
+        thePHA = 1
+    else:
+        thePHA = 0
+    
     if(getName !=farmName):
         farmName = getName
-    if(getECThreshold !=farmECThreshold):
-        farmECThreshold = getECThreshold
+    if(getECThreshold !=ecT):
+        ecT = getECThreshold
     if(getPHThreshold !=phT):
         phT = getPHThreshold
-    if(getECIntensity !=ecT):
-        ecT = getECIntensity
+    if(getECIntensity !=ecI):
+        ecI = getECIntensity
     if(getPHIntensity !=phI):
         phI = getPHIntensity
-    if(getHighECAlert !=ecA):
-        ecA = getHighECAlert
-    if(getLowPHAlert !=phA):
-        phA = getLowPHAlert
+    if(theECA !=ecA):
+        ecA = theECA
+    if(thePHA !=phA):
+        phA = thePHA
     if(getVolume !=volumeFarm):
         volumeFarm = getVolume
 
+    print(farmName)
+    print(ecT)
     db = pymysql.connect("localhost","root","009564","Status" )
     cursor = db.cursor()
-    sql= "UPDATE farmConfig SET name="+farmName+",volume="+volumeFarm+",ec="+ecT+",ph="+phT+",ecIntensity="+ecI+",phIntensity="+phI+",ecAlert="+ecA+",phAlert="+phA+" WHERE 1"
+    sql = "UPDATE farmConfig SET name=\""+str(farmName)+"\",volume=\""+str(volumeFarm)+"\",ec=\""+str(ecT)+"\",ph=\""+str(phT)+"\",ecIntensity=\""+str(ecI)+"\",phIntensity=\""+str(phI)+"\",ecAlert=\""+str(ecA)+"\",phAlert=\""+str(phA)+"\" WHERE 1"
+    print(sql)
     
     try:
         cursor.execute(sql)
         db.commit()
+        print("success update")
     except:
         db.rollback()
+        print("fail update")
     db.close()
+    
 
 def sendFirebase():
     global farmID
+    fb = firebase.FirebaseApplication('https://thesmartfarm-7f3a5.firebaseio.com/')
     theList = 0
     ec = 0.0
     ph = 0.0
     timenow = datetime.now()
     lasthour = datetime.now() - timedelta(hours = 1)
-    fb = firebase.FirebaseApplication('https://thesmartfarm-7f3a5.firebaseio.com', None)
-    database = farmID + 'Data'
+
+    database = str(farmID) + 'Data/value'
     print(database)
     db = pymysql.connect("localhost","root","009564","Status" )
     cursor = db.cursor()
-    sql= "SELECT * FROM ecphHistory WHERE time > "+lasthour+" AND time < "+timenow
+    sql= "SELECT * FROM ecphHistory WHERE time > \'"+str(lasthour)+"\' AND time < \'"+str(timenow)+"\'"
+    print(sql)
+
     try:
         cursor.execute(sql)
         result = cursor.fetchall()
         theList = len(result)
+        print(theList)
         for row in result:
             ec += row[2]
             ph += row[3]
-            
         finalEC = ec/theList
         finalPH = ph/theList
-    
-        result = fb.post('/' + database + '/value', {'ec': finalEC, 'ph': finalPH, 'time': datetime.datetime.now().strftime('%a %b %d %H:%M:%S %Y')})
+        result = fb.post(database,{'ec':str(finalEC), 'ph': str(finalPH), 'time': str(timenow.strftime('%a %b %d %H:%M:%S %Y'))})
+        print(result)
     except:
-        print("error")
+        print('error')
 
-    db.close()
+def doitthen():
+    dataStd()
+    getFromFB()
 
-
-
-    
+def senditthen():
+    dataStd()
+    sendFirebase()
 

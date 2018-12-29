@@ -4,6 +4,7 @@ import tkinter as tk
 import tkinter.font as tkfont
 import tk_tools
 import pymysql
+import firebase2
 
 
 class HydroponicApp(tk.Tk):
@@ -189,7 +190,7 @@ class SettingPage(tk.Frame):
         ecIntensityEntry.grid(row = 3, column = 1, padx = 10, pady = 5)
         phIntensityEntry.grid(row = 4, column = 1, padx = 10, pady = 5)
 
-        volumeScale = tk.Scale(rightFrame, orient = 'horizontal', from_ = 100, to = 1000, width = 20, length = 200)
+        volumeScale = tk.Scale(rightFrame, orient = 'horizontal', from_ = 50, to = 1000, width = 20, length = 200)
         ecThresholdScale = tk.Scale(rightFrame, orient = 'horizontal', from_ = 1.0, to = 5.0, resolution = 0.1, width = 20, length = 200)
         phThresholdScale = tk.Scale(rightFrame, orient = 'horizontal', from_ = 3.0, to = 8.0, resolution = 0.1, width = 20, length = 200)
         ecIntensityScale = tk.Scale(rightFrame, orient = 'horizontal', from_ = 0, to = 100, resolution = 0.1, width = 20, length = 200)
@@ -201,6 +202,38 @@ class SettingPage(tk.Frame):
         ecIntensityScale.grid(row = 3, column = 2)
         phIntensityScale.grid(row = 4, column = 2)
 
+
+        def updateEntry():
+            firebase2.doitthen()
+            db = pymysql.connect("localhost", "root", "009564", "Status")
+            cursor = db.cursor()
+            sql= "SELECT * FROM farmConfig"
+            try:
+                cursor.execute(sql)
+                result = cursor.fetchone()
+                volumeFarm = result[2]
+                ecT = result[3]
+                phT = result[4]
+                ecI = result[5]
+                phI = result[6]
+                
+                volumeEntry.config(text = volumeFarm)
+                ecThresholdEntry.config(text = ecT)
+                phThresholdEntry.config(text = phT)
+                ecIntensityEntry.config(text = ecI)
+                phIntensityEntry.config(text = phI)
+
+            except:
+                volumeFarm = 0
+                ecT = 0
+                phT = 0
+                ecI = 0
+                phI = 0
+            db.close()
+            self.after(10000, updateEntry)
+
+        updateEntry()
+        
         def setEntry():
             vol = volumeScale.get()
             ect = ecThresholdScale.get()
@@ -228,6 +261,8 @@ class SettingPage(tk.Frame):
 
         applyBtn = tk.Button(rightFrame, text = "Apply", font = ("Helvetica, 13"), command = setEntry)
         applyBtn.grid(row = 5, column = 2, pady = 20)
+
+        
 
 class RecalibratePage(tk.Frame):
 

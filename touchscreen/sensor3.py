@@ -1,6 +1,8 @@
 import pymysql
 import time
 import Adafruit_ADS1x15
+import random
+#import testrelay
 
 
 def mapping(val, valmin, valmax, newvalmin, newvalmax):
@@ -57,40 +59,45 @@ while True:
         ecValue = ecValue / compensation / 1000.0
         print("ph = %.2f" % phValue)
         print("ec = %.2f" % ecValue)
-        phStr = str(round(phValue,2))
-        ecStr = str(round(ecValue,2))
+        '''
+while True:
+    phStr = (6.3 + random.uniform(0.0,0.4) -0.2)#str(round(phValue,2))
+    ecStr = (1.4 + random.uniform(0.0,0.4) -0.2)##str(round(ecValue,2))
         
-        db = pymysql.connect("localhost","root","009564","Status" )
-        cursor = db.cursor()
 
-        sql = "UPDATE ecphCurrent SET ec = " + ecStr + ", ph = " + phStr + " WHERE ID > 0"
+    phStr = "%.2f"%phStr
+    ecStr = "%.2f"%ecStr
+        #print(phStr)
+    db = pymysql.connect("localhost","root","009564","Status" )
+    cursor = db.cursor()
 
-        try:
-           cursor.execute(sql)
-           db.commit()
-           print("finish")
+    sql = "UPDATE ecphCurrent SET ec = " + ecStr + ", ph = " + phStr + ", time = NOW() WHERE ID > 0"
 
-        except:
-           db.rollback()
-           print("fail")
+    try:
+       cursor.execute(sql)
+       db.commit()
+       print("finish")
+    except:
+        db.rollback()
+        print("fail")
 
-        db.close()
+    db.close()
 
         #history db
-        hdb = pymysql.connect("localhost","root","009564","Status" )
-        cursor2 = hdb.cursor()
-        sql = "INSERT INTO ecphHistory (id, time, ec, ph) VALUES (NULL, CURRENT_TIMESTAMP, "+ ecStr +", "+ phStr +")"
-        try:
-           cursor2.execute(sql)
-           hdb.commit()
-           print("finish2")
+    hdb = pymysql.connect("localhost","root","009564","Status" )
+    cursor2 = hdb.cursor()
+    sql = "INSERT INTO ecphHistory (id, time, ec, ph) VALUES (NULL, CURRENT_TIMESTAMP, "+ ecStr +", "+ phStr +")"
+    try:
+       cursor2.execute(sql)
+       hdb.commit()
+    #   print("finish2")
 
-        except:
-           hdb.rollback()
-           print("fail2")
+    except:
+        hdb.rollback()
+        #print("fail2")
 
-        hdb.close()
-        
+    hdb.close()
+        '''
 
 
     
